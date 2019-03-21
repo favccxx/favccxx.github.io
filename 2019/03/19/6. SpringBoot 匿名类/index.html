@@ -19,7 +19,9 @@
     <meta name="keywords" content>
 
 
-    <meta name="description" content>
+    <meta name="description" content="SpringBoot支持使用properties文件写配置，为便于引入文件，需要引用properties的文件中使用@ConfigurationProperties即可。
+示例项目：
+‘’‘im...">
 
 
 
@@ -31,7 +33,7 @@
     <!--Title-->
 
 
-<title>那年春天 | Hexo</title>
+<title>Hexo</title>
 
 
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -140,9 +142,9 @@
                     <p id="process"></p>
 <article class="post">
     <div class="post-head">
-        <h1 id="那年春天">
+        <h1 id>
             
-	            那年春天
+	            NO Title!
             
         </h1>
         <div class="post-meta">
@@ -166,7 +168,7 @@
         
         <span class="fa-wrap">
             <i class="fa fa-clock-o"></i>
-            <span class="date-meta">2019/03/11</span>
+            <span class="date-meta">2019/03/19</span>
         </span>
         
     
@@ -176,7 +178,103 @@
     </div>
     
     <div class="post-body post-content">
-        
+        <p>SpringBoot支持使用properties文件写配置，为便于引入文件，需要引用properties的文件中使用@ConfigurationProperties即可。</p>
+<p>示例项目：</p>
+<p>‘’‘<br>import org.springframework.boot.context.properties.ConfigurationProperties;<br>import org.springframework.context.annotation.Configuration;<br>import org.springframework.context.annotation.PropertySource;<br>import org.springframework.stereotype.Component;</p>
+<p>@Configuration<br>@ConfigurationProperties(prefix = “ocr”, ignoreUnknownFields = false)<br>@PropertySource(“classpath:ocr.properties”)<br>@Component<br>public class Abc {</p>
+<pre><code>private String srcDir;
+
+private String destDir;
+
+getter...
+setter...
+</code></pre><p>}<br>’‘’</p>
+<p>ocr.properties<br>‘’’<br>ocr.srcDir=D://ocr/src<br>ocr.destDir=D://ocr/dest<br>‘’’</p>
+<p>因为属性配置只允许在内部使用，不允许在外面调用,所以SpringBoot采用内部类的方式实现。</p>
+<p>EnableConfigurationPropertiesImportSelector.java<br>‘’‘<br>class EnableConfigurationPropertiesImportSelector implements ImportSelector {</p>
+<pre><code>private static final String[] IMPORTS = {
+        ConfigurationPropertiesBeanRegistrar.class.getName(),
+        ConfigurationPropertiesBindingPostProcessorRegistrar.class.getName() };
+
+@Override
+public String[] selectImports(AnnotationMetadata metadata) {
+    return IMPORTS;
+}
+
+/**
+ * {@link ImportBeanDefinitionRegistrar} for configuration properties support.
+ */
+public static class ConfigurationPropertiesBeanRegistrar
+        implements ImportBeanDefinitionRegistrar {
+
+    @Override
+    public void registerBeanDefinitions(AnnotationMetadata metadata,
+            BeanDefinitionRegistry registry) {
+        getTypes(metadata).forEach((type) -&gt; register(registry,
+                (ConfigurableListableBeanFactory) registry, type));
+    }
+
+    private List&lt;Class&lt;?&gt;&gt; getTypes(AnnotationMetadata metadata) {
+        MultiValueMap&lt;String, Object&gt; attributes = metadata
+                .getAllAnnotationAttributes(
+                        EnableConfigurationProperties.class.getName(), false);
+        return collectClasses((attributes != null) ? attributes.get(&quot;value&quot;)
+                : Collections.emptyList());
+    }
+
+    private List&lt;Class&lt;?&gt;&gt; collectClasses(List&lt;?&gt; values) {
+        return values.stream().flatMap((value) -&gt; Arrays.stream((Object[]) value))
+                .map((o) -&gt; (Class&lt;?&gt;) o).filter((type) -&gt; void.class != type)
+                .collect(Collectors.toList());
+    }
+
+    private void register(BeanDefinitionRegistry registry,
+            ConfigurableListableBeanFactory beanFactory, Class&lt;?&gt; type) {
+        String name = getName(type);
+        if (!containsBeanDefinition(beanFactory, name)) {
+            registerBeanDefinition(registry, name, type);
+        }
+    }
+
+    private String getName(Class&lt;?&gt; type) {
+        ConfigurationProperties annotation = AnnotationUtils.findAnnotation(type,
+                ConfigurationProperties.class);
+        String prefix = (annotation != null) ? annotation.prefix() : &quot;&quot;;
+        return (StringUtils.hasText(prefix) ? prefix + &quot;-&quot; + type.getName()
+                : type.getName());
+    }
+
+    private boolean containsBeanDefinition(
+            ConfigurableListableBeanFactory beanFactory, String name) {
+        if (beanFactory.containsBeanDefinition(name)) {
+            return true;
+        }
+        BeanFactory parent = beanFactory.getParentBeanFactory();
+        if (parent instanceof ConfigurableListableBeanFactory) {
+            return containsBeanDefinition((ConfigurableListableBeanFactory) parent,
+                    name);
+        }
+        return false;
+    }
+
+    private void registerBeanDefinition(BeanDefinitionRegistry registry, String name,
+            Class&lt;?&gt; type) {
+        assertHasAnnotation(type);
+        GenericBeanDefinition definition = new GenericBeanDefinition();
+        definition.setBeanClass(type);
+        registry.registerBeanDefinition(name, definition);
+    }
+
+    private void assertHasAnnotation(Class&lt;?&gt; type) {
+        Assert.notNull(
+                AnnotationUtils.findAnnotation(type, ConfigurationProperties.class),
+                () -&gt; &quot;No &quot; + ConfigurationProperties.class.getSimpleName()
+                        + &quot; annotation found on  &apos;&quot; + type.getName() + &quot;&apos;.&quot;);
+    }
+
+}
+</code></pre><p>}<br>’‘’</p>
+
     </div>
     
     <div class="post-footer">
@@ -193,15 +291,15 @@
 
 <div class="article-nav prev-next-wrap clearfix">
     
-        <a href="/2019/03/18/西家管理学/" class="pre-post btn btn-default" title>
+        <a href="/2019/03/20/SpringBoot Session会话管理/" class="pre-post btn btn-default" title>
             <i class="fa fa-angle-left fa-fw"></i><span class="hidden-lg">上一篇</span>
             <span class="hidden-xs"></span>
         </a>
     
     
-        <a href="/2019/03/11/hello-world/" class="next-post btn btn-default" title="Hello World">
+        <a href="/2019/03/19/1. SpringBoot讲讲依赖注入/" class="next-post btn btn-default" title>
             <span class="hidden-lg">下一篇</span>
-            <span class="hidden-xs">Hello World</span><i class="fa fa-angle-right fa-fw"></i>
+            <span class="hidden-xs"></span><i class="fa fa-angle-right fa-fw"></i>
         </a>
     
 </div>

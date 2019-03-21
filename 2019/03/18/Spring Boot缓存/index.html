@@ -19,7 +19,11 @@
     <meta name="keywords" content>
 
 
-    <meta name="description" content>
+    <meta name="description" content="SpringBoot 配置缓存
+在pom.xml 文件中引入依赖的jar包
+
+‘’’
+    org.springframework.boot    spring-boot-starter-ca...">
 
 
 
@@ -31,7 +35,7 @@
     <!--Title-->
 
 
-<title>那年春天 | Hexo</title>
+<title>Hexo</title>
 
 
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -140,9 +144,9 @@
                     <p id="process"></p>
 <article class="post">
     <div class="post-head">
-        <h1 id="那年春天">
+        <h1 id>
             
-	            那年春天
+	            NO Title!
             
         </h1>
         <div class="post-meta">
@@ -166,7 +170,7 @@
         
         <span class="fa-wrap">
             <i class="fa fa-clock-o"></i>
-            <span class="date-meta">2019/03/11</span>
+            <span class="date-meta">2019/03/18</span>
         </span>
         
     
@@ -176,7 +180,47 @@
     </div>
     
     <div class="post-body post-content">
-        
+        <h2 id="SpringBoot-配置缓存"><a href="#SpringBoot-配置缓存" class="headerlink" title="SpringBoot 配置缓存"></a>SpringBoot 配置缓存</h2><ol>
+<li>在pom.xml 文件中引入依赖的jar包</li>
+</ol>
+<p>‘’’</p>
+<p><dependency><br>    <groupid>org.springframework.boot</groupid><br>    <artifactid>spring-boot-starter-cache</artifactid><br></dependency><br>‘’’</p>
+<ol start="2">
+<li>使用注解在应用程序的主入口启动</li>
+</ol>
+<p>‘’’<br>@SpringBootApplication<br>@EnableCaching<br>public class Application {</p>
+<p>   public static void main(String[] args) {<br>      SpringApplication.run(Application.class, args);<br>   }<br>}<br>‘’’</p>
+<ol start="3">
+<li>在应用程序的Service层或Dao层启用注解配置. Service层和Dao层配置二选一：</li>
+</ol>
+<p>3.1 Service层配置</p>
+<p>‘’‘</p>
+<p>import org.springframework.beans.factory.annotation.Autowired;<br>import org.springframework.cache.annotation.CacheConfig;<br>import org.springframework.cache.annotation.Cacheable;<br>import org.springframework.stereotype.Service;</p>
+<p>@Service<br>@CacheConfig(cacheNames = “users”)<br>public class SysUserServiceImpl implements SysUserService {</p>
+<pre><code>@Autowired
+SysUserRepository userRepository;
+
+@Cacheable(cacheNames = { &quot;findByUserName&quot; })
+@Override
+public SysUser findByUserName(String userName) {
+    return userRepository.findByUserNameIgnoreCase(userName);
+}
+</code></pre><p>}</p>
+<p>’‘’</p>
+<p>3.2 Dao层配置</p>
+<p>‘’‘<br>import org.springframework.cache.annotation.Cacheable;<br>import org.springframework.stereotype.Component;</p>
+<p>@Component<br>public class SimpleBookRepository implements BookRepository {</p>
+<pre><code>@Override
+@Cacheable(&quot;books&quot;)
+public Book getByIsbn(String isbn) {
+    simulateSlowService();
+    return new Book(isbn, &quot;Some book&quot;);
+}
+</code></pre><p>}<br>’‘’</p>
+<ol start="4">
+<li>其它配置文件省略，启动应用服务，访问两次数据接口，可以看到第二次并不会打印SQL语句，说明缓存生效。</li>
+</ol>
+<h2 id="Spring-缓存原理及配置文件说明"><a href="#Spring-缓存原理及配置文件说明" class="headerlink" title="Spring 缓存原理及配置文件说明"></a>Spring 缓存原理及配置文件说明</h2>
     </div>
     
     <div class="post-footer">
@@ -193,15 +237,15 @@
 
 <div class="article-nav prev-next-wrap clearfix">
     
-        <a href="/2019/03/18/西家管理学/" class="pre-post btn btn-default" title>
+        <a href="/2019/03/19/2. SpringBoot讲讲依赖注入/" class="pre-post btn btn-default" title>
             <i class="fa fa-angle-left fa-fw"></i><span class="hidden-lg">上一篇</span>
             <span class="hidden-xs"></span>
         </a>
     
     
-        <a href="/2019/03/11/hello-world/" class="next-post btn btn-default" title="Hello World">
+        <a href="/2019/03/18/西家管理学/" class="next-post btn btn-default" title>
             <span class="hidden-lg">下一篇</span>
-            <span class="hidden-xs">Hello World</span><i class="fa fa-angle-right fa-fw"></i>
+            <span class="hidden-xs"></span><i class="fa fa-angle-right fa-fw"></i>
         </a>
     
 </div>
@@ -244,7 +288,7 @@
     <div class="widget">
         <h3 class="title">Table of Contents</h3>
         
-            <p>暂无目录</p>
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SpringBoot-配置缓存"><span class="toc-text">SpringBoot 配置缓存</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Spring-缓存原理及配置文件说明"><span class="toc-text">Spring 缓存原理及配置文件说明</span></a></li></ol>
         
     </div>
 </aside>
